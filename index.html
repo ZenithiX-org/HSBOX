@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>HSBOX | Advanced Sandbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Main Menu Overlay -->
+    <div id="main-menu-screen">
+        <h1 class="logo">HSBOX</h1>
+        <p class="subtitle">A premium physics sandbox experience</p>
+        <div class="map-grid">
+            <button class="map-btn" data-map="arena">
+                <span class="btn-title">The Arena</span>
+                <span class="btn-desc">Standard walled sandbox room</span>
+            </button>
+            <button class="map-btn" data-map="football">
+                <span class="btn-title">Football Stadium</span>
+                <span class="btn-desc">Physics sports field with goals</span>
+            </button>
+            <button class="map-btn" data-map="open">
+                <span class="btn-title">Infinity Plain</span>
+                <span class="btn-desc">Open world for massive builds</span>
+            </button>
+        </div>
+        <div class="version-tag">v1.2.0 Golden Patch</div>
+    </div>
+
+    <!-- UI Layer -->
+    <div id="ui-layer" style="display: none;">
+        <!-- Clean SVG Crosshair -->
+        <div id="crosshair-container">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="1.5" fill="white" />
+                <rect x="15" y="4" width="2" height="6" fill="white" fill-opacity="0.6" />
+                <rect x="15" y="22" width="2" height="6" fill="white" fill-opacity="0.6" />
+                <rect x="4" y="15" width="6" height="2" fill="white" fill-opacity="0.6" />
+                <rect x="22" y="15" width="6" height="2" fill="white" fill-opacity="0.6" />
+            </svg>
+        </div>
+
+        <div id="instructions">
+            <h2>Controls</h2>
+            <ul>
+                <li><b>WASD</b> - Movement</li>
+                <li><b>Mouse</b> - Look</li>
+                <li><b>LMB</b> - Tool Primary</li>
+                <li><b>RMB (Hold)</b> - Physics Grab</li>
+                <li><b>Q</b> - Menu Toggle</li>
+                <li><b>MMB</b> - Force Blast</li>
+            </ul>
+        </div>
+
+
+
+        <!-- Tool Indicator HUD -->
+        <div id="tool-hud">
+            <span id="tool-label">EQUIPPED:</span>
+            <span id="tool-indicator">🔫 Shoot</span>
+        </div>
+
+        <!-- Spawn Menu (Q) -->
+        <div id="spawn-menu" class="hidden-menu border-gradient">
+            <div class="menu-columns">
+                <div class="menu-col">
+                    <h2>Spawn Props</h2>
+                    <div class="spawn-grid">
+                        <button class="spawn-btn" data-type="cube">🧊 Cube</button>
+                        <button class="spawn-btn" data-type="sphere">⚽ Sphere</button>
+                        <button class="spawn-btn" data-type="cylinder">🔋 Cylinder</button>
+                    </div>
+                </div>
+                <div class="menu-col tool-col">
+                    <h2>Construction Tools</h2>
+                    <div class="spawn-grid tools-grid">
+                        <button class="tool-btn" data-tool="shoot">🔫 Projectile Launcher</button>
+                        <button class="tool-btn" data-tool="weld">🔗 Structural Weld</button>
+                        <button class="tool-btn" data-tool="delete">💥 Object Remover</button>
+                        <button class="tool-btn color-red" data-tool="color" data-color="#ff4757">🖍 Color:
+                            Ruby</button>
+                        <button class="tool-btn color-blue" data-tool="color" data-color="#1e90ff">🖍 Color:
+                            Cobalt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="renderCanvas" style="display: none;"></canvas>
+
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/cannon.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+    <script type="module" src="main.js"></script>
+    <script>
+        // Auto-hide instructions after 8 seconds
+        setTimeout(() => {
+            const inst = document.getElementById('instructions');
+            if (inst) inst.classList.add('fade-out-ui');
+        }, 8000);
+    </script>
+</body>
+
+</html>
