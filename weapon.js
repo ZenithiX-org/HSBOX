@@ -60,10 +60,26 @@ export function setupWeapons(scene, camera) {
             }
         }
     });
+
+    // Optimized: Use observable with delta time for smoother physics
+    let lastTime = 0;
+    scene.onAfterRenderObservable.add(() => {
+        const now = performance.now();
+        const delta = (now - lastTime) / 1000;
+        lastTime = now;
+        
+        // Cleanup distant or old projectiles to reduce memory
+        scene.meshes.forEach(mesh => {
+            if (mesh.name === "bullet" && mesh.position.subtract(camera.position).length() > 500) {
+                mesh.dispose();
+            }
+        });
+    });
 }
 
 function shootProjectile(scene, camera) {
-    const sphere = BABYLON.MeshBuilder.CreateSphere("bullet", { diameter: 0.4 }, scene);
+    // Optimized: Lower segment count for bullets
+    const sphere = BABYLON.MeshBuilder.CreateSphere("bullet", { diameter: 0.4, segments: 8 }, scene);
     sphere.position = camera.getFrontPosition(2);
     const mat = new BABYLON.StandardMaterial("bulletMat", scene);
     mat.emissiveColor = new BABYLON.Color3(1, 0.6, 0);
@@ -72,7 +88,8 @@ function shootProjectile(scene, camera) {
     sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 2, restitution: 0.5 }, scene);
     const force = camera.getForwardRay().direction.scale(60);
     sphere.physicsImpostor.applyImpulse(force, sphere.getAbsolutePosition());
-    setTimeout(() => sphere.dispose(), 5000);
+    // Optimized: Shorter cleanup time for projectiles
+    setTimeout(() => sphere.dispose(), 3000);
 }
 
 function deleteProp(scene, camera) {

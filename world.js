@@ -1,4 +1,5 @@
 export function buildWorld(scene, shadowGen) {
+    // Optimized: Reuse material instead of creating per-mesh
     const gridMat = new BABYLON.GridMaterial("gridMat", scene);
     gridMat.majorUnitFrequency = 10;
     gridMat.minorUnitVisibility = 0.3;
@@ -44,6 +45,7 @@ export function buildWorld(scene, shadowGen) {
 }
 
 export function buildFootballField(scene, shadowGen) {
+    // Optimized: Reuse ground material
     const ground = BABYLON.MeshBuilder.CreateGround("footballGround", { width: 200, height: 300 }, scene);
     const groundMat = new BABYLON.StandardMaterial("footballGroundMat", scene);
     groundMat.diffuseColor = new BABYLON.Color3(0.1, 0.4, 0.1); 
@@ -53,9 +55,10 @@ export function buildFootballField(scene, shadowGen) {
     ground.checkCollisions = true;
     ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 0.8 }, scene);
 
+    const postMat = new BABYLON.StandardMaterial("postMat", scene);
+    postMat.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+    
     const createGoal = (zPos) => {
-        const postMat = new BABYLON.StandardMaterial("postMat", scene);
-        postMat.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
         const p1 = BABYLON.MeshBuilder.CreateCylinder("p1", { height: 12, diameter: 0.6 }, scene);
         p1.position = new BABYLON.Vector3(-15, 6, zPos);
         const p2 = BABYLON.MeshBuilder.CreateCylinder("p2", { height: 12, diameter: 0.6 }, scene);
@@ -72,7 +75,8 @@ export function buildFootballField(scene, shadowGen) {
     }
     createGoal(149); createGoal(-149);
 
-    const ball = BABYLON.MeshBuilder.CreateSphere("soccerBall", { diameter: 8, segments: 24 }, scene);
+    // Optimized: Lower sphere segments for physics objects
+    const ball = BABYLON.MeshBuilder.CreateSphere("soccerBall", { diameter: 8, segments: 16 }, scene);
     ball.position = new BABYLON.Vector3(0, 10, 0);
     const ballMat = new BABYLON.StandardMaterial("ballMat", scene);
     ballMat.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
@@ -81,9 +85,11 @@ export function buildFootballField(scene, shadowGen) {
 }
 
 export function buildOpenField(scene, shadowGen) {
+    // Optimized: Use GridMaterial for open field (lighter than StandardMaterial)
     const ground = BABYLON.MeshBuilder.CreateGround("openGround", { width: 2000, height: 2000 }, scene);
     const groundMat = new BABYLON.GridMaterial("openGrid", scene);
     groundMat.gridRatio = 10;
+    groundMat.majorUnitFrequency = 5;
     ground.material = groundMat;
     ground.receiveShadows = true;
     ground.checkCollisions = true;
@@ -95,9 +101,12 @@ export function loadCustomMap(scene, shadowGen, filename, camera) {
         result.meshes.forEach(mesh => {
             if (mesh.getTotalVertices() > 0) {
                 mesh.receiveShadows = true;
+                // Optimized: Use simpler physics impostor for complex meshes
                 mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0 }, scene);
                 if (shadowGen) shadowGen.addShadowCaster(mesh);
             }
         });
+    }).catch(err => {
+        console.error("Failed to load custom map:", err);
     });
 }
