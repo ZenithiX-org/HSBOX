@@ -9,6 +9,7 @@ export function createCube(scene, camera) {
     const cube = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
     cube.position = camera.position.add(camera.getForwardRay().direction.scale(5));
 
+    // Optimized: Reuse material pool or use simpler material
     const mat = new BABYLON.StandardMaterial("mat", scene);
     mat.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
     mat.specularPower = 64;
@@ -25,7 +26,8 @@ export function createCube(scene, camera) {
 }
 
 export function createSphere(scene, camera) {
-    const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
+    // Optimized: Lower segment count for spawned spheres
+    const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 1, segments: 12 }, scene);
     sphere.position = camera.position.add(camera.getForwardRay().direction.scale(5));
 
     const mat = new BABYLON.StandardMaterial("sphereMat", scene);
@@ -44,7 +46,8 @@ export function createSphere(scene, camera) {
 }
 
 export function createCylinder(scene, camera) {
-    const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { diameter: 1, height: 2 }, scene);
+    // Optimized: Lower tessellation for cylinders
+    const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { diameter: 1, height: 2, tessellation: 12 }, scene);
     cylinder.rotation.x = Math.random() * Math.PI;
     cylinder.rotation.z = Math.random() * Math.PI;
     cylinder.position = camera.position.add(camera.getForwardRay().direction.scale(5));

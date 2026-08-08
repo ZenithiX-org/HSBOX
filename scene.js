@@ -23,9 +23,11 @@ export function createScene(engine, canvas, mapType) {
     light.position = new BABYLON.Vector3(50, 100, 50);
     light.intensity = 0.7;
 
-    const shadowGen = new BABYLON.ShadowGenerator(2048, light);
+    // Optimized: Lower shadow resolution and blur for better FPS
+    const shadowGen = new BABYLON.ShadowGenerator(1024, light);
     shadowGen.useBlurExponentialShadowMap = true;
-    shadowGen.blurKernel = 32;
+    shadowGen.blurKernel = 16;
+    shadowGen.transparencyShadow = false;
 
     if (mapType === "arena") buildWorld(scene, shadowGen);
     else if (mapType === "football") buildFootballField(scene, shadowGen);
