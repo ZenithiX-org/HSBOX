@@ -1,43 +1,57 @@
 import { setupPlayer } from "./player.js";
 import { setupPhysics, createCube, createSphere, createCylinder } from "./physics.js";
 import { setupWeapons, setWeaponMode } from "./weapon.js";
-import { buildWorld, buildFootballField, buildOpenField, loadCustomMap } from "./world.js";
+import { buildWorld, buildFootballField, buildOpenField } from "./world.js";
 
 export function createScene(engine, canvas, mapType) {
     const scene = new BABYLON.Scene(engine);
-
-    // ⚙️ Physics (Reverted to Sync Cannon)
     setupPhysics(scene);
 
-    // --- Polish: Rendering & Atmosphere ---
-    const ambientLight = new BABYLON.HemisphericLight("ambient", new BABYLON.Vector3(0, 1, 0), scene);
-    ambientLight.intensity = 0.5;
+    const pipeline = new BABYLON.DefaultRenderingPipeline("default", true, scene, scene.cameras);
+    pipeline.samples = 4; // MSAA (Anti-aliasing)
+    pipeline.fxaaEnabled = true;
+    pipeline.bloomEnabled = true;
+    pipeline.bloomThreshold = 0.6;
+    pipeline.bloomWeight = 0.5;
+    pipeline.bloomKernel = 64;
+    pipeline.imageProcessingEnabled = true;
+    pipeline.imageProcessing.toneMappingEnabled = true;
+    pipeline.imageProcessing.toneMappingType = BABYLON.ImageProcessingOperator.TONEMAPPING_ACES;
+    scene.postProcessManager.addPipeline(pipeline);
 
-    scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
-    scene.fogDensity = 0.002;
-    scene.fogColor = new BABYLON.Color3(0.8, 0.9, 1.0);
+    scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.08, 1); // Darker, cinematic background
+    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+    scene.fogDensity = 0.0015;
+    scene.fogColor = new BABYLON.Color3(0.05, 0.05, 0.08);
+
+    const ambientLight = new BABYLON.HemisphericLight("ambient", new BABYLON.Vector3(0, 1, 0), scene);
+    ambientLight.intensity = 0.6;
+    ambientLight.groundColor = new BABYLON.Color3(0.1, 0.1, 0.15);
 
     const camera = setupPlayer(scene, canvas);
 
     const light = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
     light.position = new BABYLON.Vector3(50, 100, 50);
-    light.intensity = 0.7;
+    light.intensity = 1.2; // Brighter for PBR
+    light.shadowEnabled = true;
 
-    // Optimized: Lower shadow resolution and blur for better FPS
-    const shadowGen = new BABYLON.ShadowGenerator(1024, light);
+    // Shadows
+    const shadowGen = new BABYLON.ShadowGenerator(2048, light);
     shadowGen.useBlurExponentialShadowMap = true;
-    shadowGen.blurKernel = 16;
-    shadowGen.transparencyShadow = false;
+    shadowGen.blurKernel = 32;
+    shadowGen.darkness = 0.4;
 
+    // Build Map
     if (mapType === "arena") buildWorld(scene, shadowGen);
     else if (mapType === "football") buildFootballField(scene, shadowGen);
     else if (mapType === "open") buildOpenField(scene, shadowGen);
     else buildWorld(scene, shadowGen);
 
+    // Skybox
     const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000 }, scene);
     const skyMat = new BABYLON.StandardMaterial("skyMat", scene);
     skyMat.backFaceCulling = false;
-    skyMat.emissiveColor = new BABYLON.Color3(0.5, 0.7, 1);
+    skyMat.emissiveColor = new BABYLON.Color3(0.1, 0.15, 0.2); // Dark blue/grey sky
     skybox.material = skyMat;
     skybox.infiniteDistance = true;
 
@@ -49,23 +63,9 @@ export function createScene(engine, canvas, mapType) {
         if (prop) shadowGen.addShadowCaster(prop);
     }
 
-    function shootForce() {
-        const ray = camera.getForwardRay();
-        const hit = scene.pickWithRay(ray);
-        if (hit.pickedMesh?.physicsImpostor) {
-            const force = ray.direction.scale(60);
-            hit.pickedMesh.physicsImpostor.applyImpulse(force, hit.pickedPoint);
-            if (hit.pickedMesh.material) {
-                const oldEmissive = hit.pickedMesh.material.emissiveColor ? hit.pickedMesh.material.emissiveColor.clone() : BABYLON.Color3.Black();
-                hit.pickedMesh.material.emissiveColor = new BABYLON.Color3(1, 1, 1);
-                setTimeout(() => { if (hit.pickedMesh?.material) hit.pickedMesh.material.emissiveColor = oldEmissive; }, 100);
-            }
-        }
-    }
-
+    // --- Menu Logic ---
     const spawnMenu = document.getElementById("spawn-menu");
     window.addEventListener("keydown", (e) => {
-        if (e.key.toLowerCase() === "e") spawnProp("cube");
         if (e.key.toLowerCase() === "q") {
             if (spawnMenu.classList.contains("hidden-menu")) {
                 spawnMenu.classList.remove("hidden-menu");
@@ -93,9 +93,6 @@ export function createScene(engine, canvas, mapType) {
         });
     });
 
-    window.addEventListener("mousedown", (e) => { if (e.button === 1) shootForce(); });
-
     setupWeapons(scene, camera);
-
     return scene;
 }
